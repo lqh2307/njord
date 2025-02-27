@@ -16,9 +16,7 @@ services:
       - ./mount_data/postgres:/var/lib/postgresql/data
 
   postgressetup:
-    build:
-      context: ./postgres_init
-      dockerfile: Dockerfile
+    image: 'quanghuy2307/postgis_init:1.0.0'
     networks:
       - overlay
     restart: "no"
@@ -26,7 +24,7 @@ services:
       postgres:
         condition: service_started
     volumes:
-      - ./postgres_init/scripts:/postgres_init
+      - ./chart_server_db/postgres_init/scripts:/postgres_init
     environment:
       PGUSER: admin
       PGPASSWORD: mysecretpassword
@@ -36,7 +34,7 @@ services:
     entrypoint: [ "sh", "-c", "sleep 5 && /postgres_init/postgres_init.sh" ]
 
   memcached:
-    image: memcached:1.6.37
+    image: 'memcached:1.6.37'
     networks:
       - overlay
     ports:
@@ -47,7 +45,7 @@ services:
         condition: service_completed_successfully
 
   s57server:
-    image: ghcr.io/manimaul/njord-chart-server:1.0-SNAPSHOT
+    image: 'quanghuy2307/s57server:1.0.0'
     networks:
       - overlay
     ports:
