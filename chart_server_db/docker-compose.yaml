@@ -1,38 +1,13 @@
-# Local development
-version: '3.8'
+networks:
+  overlay:
+
 services:
-
-#  s57server:
-#    image: ghcr.io/manimaul/njord-chart-server:1.0-SNAPSHOT
-#    networks:
-#      - overlay
-#    ports:
-#      - "9000:9000"
-#    environment:
-#      JAVA_OPTS: "-Dconfig.file=/opt/chart_server/application.conf \
-#      -Dcharts.webStaticContent=/opt/chart_server/public \
-#      -Djava.library.path=/opt/gdal/jni \
-#      -Dcharts.pgHost=postgres -Dcharts.memcacheHost=memcached"
-#    depends_on:
-#      - postgres
-#      - memcached
-
-  memcached:
-    image: memcached:1.6
-    networks:
-      - overlay
-    ports:
-      - "11211:11211"
-    command: memcached -I 128m -m 512
-  #docker run --name memcached -d -p 11211:11211 memcached memcached -m 512 -I 128m
-
   postgres:
     image: 'postgis/postgis:13-3.1'
     networks:
       - overlay
     ports:
       - "5432:5432"
-      # We only expose the port here for local dev purposes
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U admin"]
       interval: 10s
@@ -47,11 +22,12 @@ services:
     build:
       context: ./postgres_init
       dockerfile: Dockerfile
-    depends_on:
-      - postgres
     networks:
       - overlay
     restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - ./postgres_init/scripts:/postgres_init
     environment:
@@ -60,9 +36,31 @@ services:
       PGHOST: postgres
       PGPORT: 5432
       PGDATABASE: s57server
-
     entrypoint: [ "/postgres_init/postgres_init.sh" ]
 
+  memcached:
+    image: memcached:1.6
+    networks:
+      - overlay
+    ports:
+      - "11211:11211"
+    command: memcached -I 128m -m 512
+    depends_on:
+      - postgressetup
 
-networks:
-  overlay:
+  s57server:
+    image: ghcr.io/manimaul/njord-chart-server:1.0-SNAPSHOT
+    networks:
+      - overlay
+    ports:
+      - "9000:9000"
+    environment:
+      JAVA_OPTS: "-Dconfig.file=/opt/chart_server/application.conf \
+        -Dcharts.webStaticContent=/opt/chart_server/public \
+        -Djava.library.path=/opt/gdal/jni \
+        -Dcharts.pgHost=postgres -Dcharts.memcacheHost=memcached"
+    depends_on:
+      postgressetup:
+        condition: service_completed_successfully
+      memcached:
+        condition: service_started

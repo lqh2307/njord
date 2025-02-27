@@ -1,9 +1,15 @@
 # Image for initializing the PostGIS Db
 FROM debian:buster-slim
 
-RUN apt-get update && apt-get install -y postgresql-client
+RUN apt-get update -y \
+  && apt-get install -y \
+    postgresql-client \
+  && apt-get -y --purge autoremove \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /postgres_init
+
 COPY scripts/up.sql .
 COPY scripts/postgres_init.sh .
 
