@@ -3,7 +3,7 @@ networks:
 
 services:
   postgres:
-    image: 'postgis/postgis:13-3.1'
+    image: 'postgis/postgis:17-3.5'
     networks:
       - overlay
     ports:
@@ -17,6 +17,8 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: mysecretpassword
       POSTGRES_DB: s57server
+    volumes:
+      - ./mount_data/postgres:/var/lib/postgresql/data
 
   postgressetup:
     build:
@@ -39,7 +41,7 @@ services:
     entrypoint: [ "/postgres_init/postgres_init.sh" ]
 
   memcached:
-    image: memcached:1.6
+    image: memcached:1.6.37
     networks:
       - overlay
     ports:
@@ -58,9 +60,12 @@ services:
       JAVA_OPTS: "-Dconfig.file=/opt/chart_server/application.conf \
         -Dcharts.webStaticContent=/opt/chart_server/public \
         -Djava.library.path=/opt/gdal/jni \
-        -Dcharts.pgHost=postgres -Dcharts.memcacheHost=memcached"
+        -Dcharts.pgHost=postgres \
+        -Dcharts.memcacheHost=memcached"
     depends_on:
       postgressetup:
         condition: service_completed_successfully
       memcached:
         condition: service_started
+    volumes:
+      - ./mount_data/s57server/application.conf:/opt/chart_server/application.conf

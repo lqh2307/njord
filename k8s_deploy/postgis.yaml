@@ -37,7 +37,7 @@ spec:
             requests:
               cpu: 750m
               memory: "1G"
-          image: postgis/postgis:13-3.1
+          image: postgis/postgis:17-3.5
           ports:
             - name: postgres
               containerPort: 5432

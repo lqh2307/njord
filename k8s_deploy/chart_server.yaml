@@ -206,7 +206,7 @@ spec:
     spec:
       containers:
         - name: memcached
-          image: memcached:1.6
+          image: memcached:1.6.37
           ports:
             - containerPort: 11211
 ---
