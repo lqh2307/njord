@@ -4,7 +4,6 @@
 Live Demo: https://openenc.com
 
 <p>
-    <img alt="Njord" src="./chart_server_fe/src/njord.jpg" width=500 >
     <img alt="Screenshot" src="./screenshot.png" width=500 >
 </p>
 
