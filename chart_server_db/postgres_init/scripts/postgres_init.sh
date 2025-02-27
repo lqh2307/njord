@@ -9,6 +9,4 @@ done
 
 >&2 echo "Postgres is up - executing command"
 
-createdb -w s57server
-
 psql -a -q -f ./up.sql

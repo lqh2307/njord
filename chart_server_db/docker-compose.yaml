@@ -33,7 +33,7 @@ services:
       PGHOST: postgres
       PGPORT: 5432
       PGDATABASE: s57server
-    entrypoint: [ "/postgres_init/postgres_init.sh" ]
+    entrypoint: [ "sh", "-c", "sleep 5 && /postgres_init/postgres_init.sh" ]
 
   memcached:
     image: memcached:1.6.37
