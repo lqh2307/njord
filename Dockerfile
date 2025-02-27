@@ -29,7 +29,7 @@ WORKDIR /build
 ENV GDAL_VERSION=3.10.0
 
 RUN wget -q http://download.osgeo.org/gdal/$GDAL_VERSION/gdal-$GDAL_VERSION.tar.xz \
-	&& tar xzf ./gdal-$GDAL_VERSION.tar.xz \
+	&& tar -xf ./gdal-$GDAL_VERSION.tar.xz \
 	&& rm -rf ./gdal-$GDAL_VERSION.tar.xz \
 	&& cd ./gdal-$GDAL_VERSION \
 	&& mkdir -p /opt/gdal \
