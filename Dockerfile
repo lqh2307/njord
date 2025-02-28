@@ -11,8 +11,6 @@ RUN apt-get update -y \
 		openjdk-17-jdk-headless \
 		openjdk-17-source \
 		ant \
-		wget \
-		git \
 	&& apt-get -y --purge autoremove \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
@@ -24,13 +22,13 @@ ENV JAVA=/usr/lib/jvm/java-17-openjdk-amd64/bin/java
 ENV JAR=/usr/lib/jvm/java-17-openjdk-amd64/bin/jar
 ENV JAVA_INCLUDE="-I/usr/lib/jvm/java-17-openjdk-amd64/include -I/usr/lib/jvm/java-17-openjdk-amd64/include/linux"
 
-WORKDIR /build
+ADD . /njord
+
+WORKDIR /njord/chart_server/libs
 
 ENV GDAL_VERSION=3.10.0
 
-RUN wget -q http://download.osgeo.org/gdal/$GDAL_VERSION/gdal-$GDAL_VERSION.tar.xz \
-	&& tar -xf ./gdal-$GDAL_VERSION.tar.xz \
-	&& rm -rf ./gdal-$GDAL_VERSION.tar.xz \
+RUN tar -xf ./gdal-$GDAL_VERSION.tar.xz \
 	&& cd ./gdal-$GDAL_VERSION \
 	&& mkdir -p /opt/gdal \
 	&& cmake -S . -B build \
@@ -45,17 +43,13 @@ RUN wget -q http://download.osgeo.org/gdal/$GDAL_VERSION/gdal-$GDAL_VERSION.tar.
 	&& cmake --build build \
 	&& cmake --install build
 
-WORKDIR /build/njord
-
-ADD . .
+WORKDIR /njord
 
 RUN ./gradlew :chart_server:installDist \
 	&& ./gradlew :web:jsBrowserDistribution
 
 
 FROM debian:bookworm AS runner
-
-ENV JAVA_OPTS="-Dconfig.file=/opt/chart_server/application.conf -Dcharts.webStaticContent=/opt/chart_server/public -Djava.library.path=/opt/gdal/jni"
 
 RUN apt-get update -y \
 	&& apt-get upgrade -y \
@@ -67,13 +61,15 @@ RUN apt-get update -y \
 		libproj25 \
 		libjson-c5 \
 	&& apt-get -y --purge autoremove \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/gdal /opt/gdal
-COPY --from=builder /build/njord/chart_server/build/install /opt
-COPY --from=builder /build/njord/chart_server/src/jvmMain/resources/application.conf /opt/chart_server/application.conf
-COPY --from=builder /build/njord/chart_server/libs/jmx-agent.jar /opt/chart_server/jmx-agent.jar
-COPY --from=builder /build/njord/web/build/dist/js/productionExecutable /opt/chart_server/public
+COPY --from=builder /njord/chart_server/build/install /opt
+COPY --from=builder /njord/chart_server/src/jvmMain/resources/application.conf /opt/chart_server/application.conf
+COPY --from=builder /njord/chart_server/libs/jmx-agent.jar /opt/chart_server/jmx-agent.jar
+COPY --from=builder /njord/web/build/dist/js/productionExecutable /opt/chart_server/public
+
+ENV JAVA_OPTS="-Dconfig.file=/opt/chart_server/application.conf -Dcharts.webStaticContent=/opt/chart_server/public -Djava.library.path=/opt/gdal/jni"
 
 CMD ["/opt/chart_server/bin/chart_server"]
