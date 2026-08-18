@@ -51,6 +51,11 @@ spec:
               # live traffic, and this statement would pin one server connection for its whole
               # run. Host/port/db/user come from the same secret the sidecars mount, so there is
               # one place to change them.
+              #
+              # That host/port now resolves to the njord-db-relay Service, not the database
+              # directly, so this job reaches Postgres over IPv6 like everything else. The
+              # relay is a dumb TCP forwarder rather than a pooler, so the "no pgbouncer"
+              # reasoning above still holds - nothing here pins a pooled server connection.
               eval "$(sed -n 's/^s57server *= *//p' /etc/pgbouncer/pgbouncer.ini)"
               PGPASSWORD=$(awk '/^"'"$user"'"/ {gsub(/"/, "", $2); print $2}' /etc/pgbouncer/userlist.txt)
               export PGPASSWORD

@@ -36,13 +36,12 @@ task("version") {
     }
 }
 
+
 /**
  * Writes k8s secret with CHART_SERVER_OPTS (adminKey, adminUser, adminPass)
  */
-task("secret") {
-    doLast {
-        println(k8sApplySecret())
-    }
+task<Exec>("secret") {
+    commandLine("bash", "-c", "echo '${secretYaml()}' | kubectl apply -f -")
 }
 
 /**
